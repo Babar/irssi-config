@@ -84,7 +84,7 @@ use strict;
 use vars qw ($VERSION %IRSSI $rcsid);
 
 $rcsid = '$Id: operit.pl,v 1.14 2003/09/06 12:27:11 pasky Exp pasky $';
-($VERSION) = '$Revision: 1.14 $' =~ / (\d+\.\d+) /;
+($VERSION) = '$Revision: 1.15 $' =~ / (\d+\.\d+) /;
 %IRSSI = (
           name        => 'operit',
           authors     => 'Petr Baudis',
@@ -140,38 +140,60 @@ sub event_privmsg {
       my $a = 0;
 
       $chan = $msgtarget if (not $chan and $msgtarget ne $server->{nick});
-      return unless ($chan =~ /^[#!&]/);
 
-      foreach (split /\s+/, Irssi::settings_get_str("operit_chans")) {
-        s/\./\\./;
-	s/\*/.*/g;
-	if ($chan =~ /^$_$/i) {
-	  $a++;
+      my @okchans;
+
+      foreach my $chansplit (split(/\,/, $chan)) {
+        next unless ($chansplit =~ /^[#!&]/);
+	my $chan_tmp;
+        unless ($chan_tmp = $server->channel_find($chansplit)) {
+	  Irssi::print "$target requested $cmd on $chansplit but I'm not in there!";
+	  next;
 	}
+        my $imop = $chan_tmp->nick_find($server->{nick})->{op};
+
+        foreach (split /\s+/, Irssi::settings_get_str("operit_chans")) {
+          s/\./\\./;
+	  s/\*/.*/g;
+	  if ($chansplit =~ /^$_$/i) {
+	    $a++;
+	  }
+        }
+        unless ($a) {
+	  Irssi::print "Unauthorized $cmd $chansplit by $target (not in operit_chans)" if (Irssi::settings_get_bool("operit_show_requests"));
+	  next;
+        }
+
+	$a = 1;
+        foreach (split /\s+/, Irssi::settings_get_str("operit_chans_deny")) {
+          s/\./\\./;
+	  s/\*/.*/g;
+	  if ($chansplit =~ /^$_$/i) {
+	    $a--;
+	  }
+	}
+        unless ($a) {
+	  Irssi::print "Unauthorized $cmd $chansplit by $target (in operit_chans_deny)" if (Irssi::settings_get_bool("operit_show_requests"));
+	  next;
+	}
+      
+        foreach (split /^\s+$/, Irssi::settings_get_str("operit_hosts_deny")) {
+          s/\./\\./;
+	  s/\*/.*/g;
+	  if ($address =~ /$_/i) {
+	    $a--;
+	  }
+	}
+        unless ($a) {
+	  Irssi::print "Unauthorized $cmd $chansplit by $target <$address> (in operit_hosts_deny)" if (Irssi::settings_get_bool("operit_show_requests"));
+	  next;
+        }
+
+	push @okchans, $chansplit if ($a && ((lc($cmd) eq "operit" || lc($cmd) eq "invait") && $imop));
       }
 
-      unless ($a) {
-	Irssi::print "Unauthorized $cmd $chan by $target (not in operit_chans)" if (Irssi::settings_get_bool("operit_show_requests"));
-	return;
-      }
-      
-      foreach (split /\s+/, Irssi::settings_get_str("operit_chans_deny")) {
-        s/\./\\./;
-	s/\*/.*/g;
-	if ($chan =~ /^$_$/i) {
-	  Irssi::print "Unauthorized $cmd $chan by $target (in operit_chans_deny)" if (Irssi::settings_get_bool("operit_show_requests"));
-	  return;
-	}
-      }
-      
-      foreach (split /^\s+$/, Irssi::settings_get_str("operit_hosts_deny")) {
-        s/\./\\./;
-	s/\*/.*/g;
-	if ($address =~ /$_/i) {
-	  Irssi::print "Unauthorized $cmd $chan by $target <$address> (in operit_hosts_deny)" if (Irssi::settings_get_bool("operit_show_requests"));
-	  return;
-	}
-      }
+      $chan = join(",", @okchans);
+      return unless @okchans;
 
       $queue = time;
       
