@@ -1,0 +1,15 @@
+/script run autoop
+#/autoop #a.org mu*!mu@cable-*.*.*.coditel.net
+#/autoop #babar mofo*!micks@badass.mofo.nl Kelerowa*!Kelerowa@manuella.babar.us JoannaK*!Kelerowa@pb189.pila.sdi.tpnet.pl Milkaa*!milkaa@lydia.adsl.nerim.net
+/autoop #babar mofo*!micks@badass.mofo.n Buszmena*!buszmena@196-179.is.net.pl Buszmena*!buszmena@boss.suntar.pl
+#/autoop #photo night*!nightx@nightyx.users.undernet.org Amitie!Amitie*@dhcp-*-*-*-*.customers.tvtnet.ch Oceanne*!oceanne@dhcp-*-*-*-*.customers.tvtnet.ch lyne*!parle@dhcp-*-*-*-*.customers.tvtnet.ch audrina!audrina*@dhcp-*-*-*-*.customers.tvtnet.ch
+/autoop #cronus mofo*!micks@crazy.mo.fo tastyfish*!cronus@r2d2.reverse.net cronus*!cronus@verizon-gni.com
+/autoop #grenoble Ken0bix*!Kenobix@osx-g3.ujf-grenoble.fr nicozozo!*zozo@lda.homeftp.net
+/autoop #chambery flakyjo*!~flakyjo@vss35-1-88-168-241-64.fbx.proxad.net melie*!~flakyjo@vss35-1-88-168-241-64.fbx.proxad.net
+
+/script run autocycle
+#/autocycle #photo
+/autocycle #poufs
+/autocycle #grenoble
+/autocycle #babar
+/set hilightwin_sendnotify ON

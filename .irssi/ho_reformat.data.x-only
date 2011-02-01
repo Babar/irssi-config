@@ -1,0 +1,286 @@
+# Datafile for ho-reformat.pl, server notice reformatting.
+# Part of the Hybrid Oper Script Collection.
+# See http://www.garion.org/irssi/hosc.php for the full archive.
+
+# -------------------------------------------------------------------
+# This is the IRCnet 2.11 specific datafile.
+# Created by Babar, based on Garion's one for Hybrid 7.
+# NOTE: This file is far from complete. Additions are welcome.
+# -------------------------------------------------------------------
+
+# Lines beginning with a # are ignored, as are empty lines.
+
+# Data formats consist of 4 lines:
+# - the (unique!) name plus (optional) options.
+# - the regexp to match the received server notice with.
+# - the format in which to display the message.
+# - the name(s) of the window to display the message to plus (optional)
+#   the message level of the message.
+
+# The options behind the name are, for now, only "continuematching".
+# If this is present, the script will continue matching if this regexp
+# has been matched. The default behaviour is to stop once a match has been
+# found.
+
+# In the format, $0 is the server tag, and $1 .. $n are the matched strings
+# of the regular expression.
+
+# Message level is CRAP by default. Use "MSG" to get a normal message
+# hilight, and HILIGHT for a hilight.
+# Use any number of target windows to send the message to. For example,
+# "client local HILIGHT" will send the reformatted notice to both the windows
+# 'client' and 'local' with message level HILIGHT.
+
+# There is one special window, which is "devnull". If a matched server
+# notice has "devnull" as target, this notice will be discarded.
+
+# The letter in square brackets in the comment is the user mode that needs
+# to be set to see these messages.
+
+# Default target window names (incomplete list):
+# client  - connect, quit, spoof
+# kill    - kill, kline
+# warning - possible flood
+# oper    - oper, failed oper
+# server  - netsplit, netjoin
+# rest    - the rest
+
+
+# [c] Client connect
+# nick, user, host, ip, class, realname
+client_connect
+Client connecting: (.*) is (.*) from (.*) \[(.*)\] named (.*)
+%gConnect    :%n %_$[9]1%_ :: $2@$3 [$4]:: $5
+crap1
+
+# [c] Client exit
+# nick, user, host, reason, ip
+client_exit
+Client exiting: (.*) was (.*) from (.*) reason: ("?([^\"]*)"?)
+%rDisconnect :%n %_$[9]1%_ :: $2@$3 :: $4
+crap1
+
+
+Received KILL message for (.*)!(.*)\[(.*)\]\. From (.*) Path: \S+ \((.*@.*)\[(.*)\]\((.*)\) <- \((.*@.*)\)(.*)(\[.*@.*\])\)
+
+
+#type3
+nick_coll3
+Received KILL message for (.*)!(.*)\[(.*)\]\. From (.*) Path: (.*) \((.*)\[(.*)\]\((.*)\) <- ([^()]+)\[(.*)\]\)$
+%RCOLLISION%n - Nickchange - for user $1: collided $2 on %_$3%_ and $6 on %_$7%_
+crap1
+
+#type7
+#Received KILL message for solpot3!~eggdrop@dsl-tregw2ie8.dial.inet.fi[*.fi/2.10]. From irc1.inet.fi Path: irc.felk.cvut.cz!irc.ipv6.cesnet.cz!*.club-internet.fr!*.se[unknown@130.240.22.200]!hub.se[unknown@192.168.13.2]!*.fi[unknown@192.168.17.2]!*.hut.fi[unknown@130.233.48.241]!irc1.inet.fi!irc1.inet.fi ((~eggdrop@dsl-tregw2ie8.dial.inet.fi)solpot3 <- (-eggdrop@dsl-tregw2ie8.dial.inet.fi)irc.cs.hut.fi)
+nick_coll7
+Received KILL message for (.*)!(.*)\[(.*)\]\. From (.*) \(\((.*)\)([^][()]+) <- \((.*)\)([^][()]+)\)$
+%RCOLLISION%n - Nickchange - for user $1: collided $2 on %_$3%_ and $7 on %_$8%_
+crap1
+
+#type6
+#Received KILL message for Hakki!~hakki@cs158086.pp.htv.fi[*.fi/2.10]. From irc.cs.hut.fi Path: irc.felk.cvut.cz!irc.ipv6.cesnet.cz!*.club-internet.fr!*.se[unknown@130.240.22.200]!hub.se[unknown@192.168.13.2]!*.fi[unknown@192.168.17.2]!*.hut.fi[unknown@130.233.48.241]!irc.cs.hut.fi ((~hakki@cs158086.pp.htv.fi)*.tut.fi <- (~hakki@dsl-jklgw2nd1.dial.inet.fi)irc1.inet.fi
+nick_coll6
+Received KILL message for (.*)!(.*)\[(.*)\]\. From (.*) \(\((.*)\)([^][()]+) <- \((.*)\)([^][()]+)$
+%RCOLLISION%n - Classic - for user $1: collided $2 on %_$3%_ and $7 on %_$8%_
+crap1
+
+#type5
+#Received KILL message for Sasss!~Sasss@Sasss.tb.ngnet.it[*.eutelia.it/2.10]. From hub.club-internet.fr Path: irc.felk.cvut.cz!irc.ipv6.cesnet.cz!*.club-internet.fr!hub.club-internet.fr (Sasss[*.cz] != *.se[@130.240.22.200])
+nick_coll5
+Received KILL message for (.*)!(.*)\[(.*)\]\. From (.*) Path: (.*) \((.*)\] != (.*)\[(.*)\]\)$
+COLLISION%n - Wrong direction - for user $1 on $2 via $3 :: $6 != $7
+crap1
+
+
+# [?] Kill
+#%ROPERKILL%n $2 ($3@$4) on %R$5%n by %_$7%_ ($9)
+oper_kill
+Received KILL message for ((.*)!(.*)@(.*)\[(.*)/(.*)\])\. From ([^.]*) Path: (\S+) \((.*)\)
+%ROPERKILL%n for %_$2%_ $3@$4 on %R$5%n by %_$7%_ with %_$9%_
+crap1 HILIGHT
+
+#service online
+service_on
+Received SERVICE (.*)@(.*) from (.*) via (.*)\[(.*)@(.*)\] \((.*)\)
+%CService%n $1 %RON%n from $2 called $7 
+crap2
+
+#service offline
+service_off
+Received QUIT (.*)@(.*) from (.*)@(\S*) (.*)
+%CService%n $1 %ROFF%n from $2 with $5
+crap2
+
+
+#kline
+kline
+Kill line active for (.*)\[(.*)@(.*)\]
+%RKill line%n for user $1 on $2@$3
+crap1
+
+# [n] Nick change
+# oldnick, newnick, user, host
+nickchange
+Nick change (.*) to (.*) for (.*) from (.*)
+%cNICKCHANGE :%n $[9]1 ->  %_$2%_  [$3@$4]
+crap1
+
+# [?] Oper
+# nick, user, host
+oper
+(.*) \((.*)@(.*)\) is now operator \(o\)
+%YOPER%n $1 ($2@$3)
+crap1
+
+# [?] Failed oper attempt
+# nick, user, host
+oper_failed
+Failed OPER attempt - host mismatch by (.*) \((.*)@(.*)\)
+[$0] %ROPERFAIL%n $1 ($2@$3).
+crap1
+
+# [x] Server split
+# source, target, reason
+server_split
+Received SQUIT (.*) from (.*) \((.*)\)
+%rSERVER SPLIT%n %_$1%_ from %_$2%_ with %R$3
+crap2
+
+# [x] Server join 2.10
+# source, target, hops, IP, name
+server_join
+Received SERVER (.*) from (.*) \((\d+)( \[.*\])? (.*)\)
+%gSERVER JOIN%n %_$1%_ from %_$2%_(%G$3%n) named :: $4 $5
+crap2
+
+# [?] Timed temporary K-line added
+# nick, user, host, reason
+timed_kline_added
+(.*) added a tkline \((.*)\) for (.*)@(.*) with reason: (.*)
+%rTKLINE%n on $2s for $3@$4 by $1 with reason $5
+crap1
+
+# added from server
+timed_klined_server
+Added tkline \((.*)\) for (.*)@(.*) with reason: (.*)
+%rTKLINE ADDED%n 
+crap1
+
+# [?] Temporary K-line expired
+# hostmask
+tkline_expired
+Temporary K-line for \[(.*@.*)\] expired
+[$0] %gTKLINE%n $1.
+crap1
+
+# [?] K-line active
+# nick, user, host
+kline_active
+KLINE active for (.*)\[(.*)@(.*)\]
+%cKLINE%n active: $1 ($2@$3).
+crap1
+
+# [?] K-lined
+# user, host
+kline
+K-lined (.*)@(.*)\.
+%cKLINE%n: $2@$3.
+crap1
+
+# [?] Too many user connection
+#Too many user connections (local) from Botik[albert@linux.gympos.sk].
+# nick, host
+#too_many_connection
+#Too many user connections \((local|global)\) from (.*)\[(.*)@(.*)\]\.
+#%CIP%n $3: $2 ($1).
+#crap1
+
+# [?] New max local clients
+# number
+max_local_clients
+New Max Local Clients: (.*)
+%CMAX%n $1
+crap1
+
+# [?] Local decrease
+# old value, new value, time elapsed
+decrease_local_clients
+Local decrease from (\d+) to (\d+) clients in (\d+) seconds
+%CDECREASE%n From $1 to $2 in $3 seconds
+crap1
+
+# [?] STATS <letter>
+# letter, nick, user, host
+stats_requested
+Stats (.) by (.*) from (.*) on (.*)
+%ySTATS%n    %_$1%_  $2!$3@$4
+crap1
+
+# [?] Invalid Username
+# user, host
+invalid_username
+Invalid username: (.*)@(.*)\.
+%CInvalid username%n $1@$2.
+crap1
+
+# [?] IP Mismatch
+# IP, name, IP in hex
+ip_mismatch
+IP# Mismatch: (.*) != (.*)\[(.*)\]
+%CIP%n $1 != $3 ($2).
+crap1
+
+# [?] Delayed kills
+# total, kills, time
+delayed_kill
+DelayedKills checked (\d+) killed (\d+) in (\d+) sec
+%CDelayKills%n Killed $2 of $1 users in $3s
+crap1
+
+# [?] Autoconnect: link establishment
+# server, user, ip, version
+link_establishment
+Link with (.*)\[(.*)@(.*)\] established. \((.*)\)
+%CLINK%n $1 [$2@$3] ($4) established
+crap2
+
+# [?] Autoconnect: server received
+# server name, hop count, description
+#received_server
+#Received SERVER (.*) \((\d+) .*\)$
+#%CJOIN%n $1 ($2): $3
+#crap2
+
+# [?] Start of burst
+# server, user, ip, size, compressed size, ratio
+Connect burst to (.*)\[(.*)@(.*)\]: (\d+), compressed: (\d+) \((.*)\)
+%CBURST%n $1 [$2@$3]: $4 bytes, compressed $5 ($6)
+crap2
+
+# [?] End of burst, local
+# server, burst time
+burst_time
+End of burst from (.*) after (\d+) seconds.
+%cEOB%n $1: $2s.
+crap2
+
+# [?] End of burst 2.11
+# server, SID, ??
+end_of_burst
+Received EOB for (.*) \[(.*)\] \((.*)\)
+%cEOB%n $1/$2: $3
+crap2
+
+#connect failure
+#connect failure: axis007[unknown@193.110.186.71] Connection reset by peer
+con_failure
+connect failure: (.*)\[(.*)@(.*)\] (.*)
+%Cconnect failure%n for user $1 on $2@$3 with $4
+crap1
+
+# Catchall for the rest
+catchall
+(.*)
+REST: $1
+crap1
+# EOF

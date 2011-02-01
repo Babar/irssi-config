@@ -1,0 +1,47 @@
+#!/usr/bin/perl -wT
+# drop-in replacement for notify-send
+# http://www.0x11.net/notify-remote/notify-send
+# it sends the notification to a remote host by marshalling the message
+# place it in /usr/local/bin/ for example
+use strict;
+use Getopt::Long;
+
+sub escape(\$)
+{
+	my $s = shift;
+	${$s} =~ s/\n/\\n/g;
+	return $s;
+}
+
+my ($category, $summary, $icon, $timeout, $message, $urgency);
+
+$summary = shift || "";
+$message = shift || "";
+
+my $result = GetOptions ("urgency=s" => \$urgency,
+  "u=s"           => \$urgency,
+  "expire-time=i" => \$timeout,
+  "t=i"           => \$timeout,
+  "category=s"    => \$category,
+  "c=s"           => \$category,
+  "icon=s"        => \$icon,
+  "i=s"           => \$icon);
+
+exit unless $result;
+
+escape($message);
+escape($summary);
+
+# collect the whole output in one variable since stderr seems to be
+# line-buffered
+my $lines = "";
+$lines .= "CATEGORY $category\n" if $category;
+$lines .= "SUBJECT $summary\n" if $summary;
+$lines .= "URGENCY $urgency\n" if $urgency;
+$lines .= "ICON $icon\n" if $icon;
+$lines .= "TIMEOUT $timeout\n" if defined $timeout;
+$lines .= "CONTENT $message\n" if $message;
+
+print STDERR "\033[5i";
+print STDERR $lines;
+print STDERR "\033[4i";

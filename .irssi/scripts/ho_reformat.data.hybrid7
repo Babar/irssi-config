@@ -1,0 +1,224 @@
+# Datafile for ho-reformat.pl, server notice reformatting.
+# Part of the Hybrid Oper Script Collection.
+# See http://www.garion.org/irssi/hosc.php for the full archive.
+
+# -------------------------------------------------------------------
+# This is the Hybrid 7 specific datafile.
+# Created by Garion.
+# NOTE: This file is far from complete. Additions are welcome.
+# -------------------------------------------------------------------
+
+# Lines beginning with a # are ignored, as are empty lines.
+
+# Data formats consist of 4 lines:
+# - the (unique!) name plus (optional) options.
+# - the regexp to match the received server notice with.
+# - the format in which to display the message.
+# - the name(s) of the window to display the message to plus (optional)
+#   the message level of the message.
+
+# The options behind the name are, for now, only "continuematching".
+# If this is present, the script will continue matching if this regexp
+# has been matched. The default behaviour is to stop once a match has been
+# found.
+
+# In the format, $0 is the server tag, and $1 .. $n are the matched strings
+# of the regular expression.
+
+# Message level is CRAP by default. Use "MSG" to get a normal message
+# hilight, and HILIGHT for a hilight.
+# Use any number of target windows to send the message to. For example,
+# "client local HILIGHT" will send the reformatted notice to both the windows
+# 'client' and 'local' with message level HILIGHT.
+
+# There is one special window, which is "devnull". If a matched server
+# notice has "devnull" as target, this notice will be discarded.
+
+# The letter in square brackets in the comment is the user mode that needs
+# to be set to see these messages.
+
+# Default target window names (incomplete list):
+# client  - connect, quit, spoof
+# kill    - kill, kline
+# warning - possible flood
+# oper    - oper, failed oper
+# server  - netsplit, netjoin
+# rest    - the rest
+
+
+# [c] Client connect
+# nick, user, host, ip, class, realname
+client_connect
+Client connecting: (.*) \((.*)@(.*)\) \[(.*)\] {(.*)} \[(.*)\]
+%GCONN%n $1 ($2@$3) ($4) in $5.
+client
+#[$0] %gCONN%n $1!$2@$3 ($4) in $5.
+
+# [c] Client exit
+# nick, user, host, reason, ip
+client_exit
+Client exiting: (.*) \((.*)@(.*)\) \[(.*)\] \[(.*)\]
+[$0] %rEXIT%n $1!$2@$3 ($5): $4.
+client
+
+# [b] Flood
+# nick, user, host, server, target
+poss_flood
+Possible Flooder (.*) \[(.*)@(.*)\] on (.*) target: (.*)
+[$0] %rFLOOD%n $1!$2@$3 ($4) target $5.
+warning
+
+# [?] Kill
+# nick, killer, path, reason
+kill
+Received KILL message for (.*)\. From (.*) Path: (.*) \((.*)\)
+[$0] %RKILL%n $1 by $2 ($4).
+kill
+
+# [n] Nick change
+# oldnick, newnick, user, host
+nickchange
+Nick change: From (.*) to (.*) \[(.*)@(.*)\]
+[$0] %cNICK%n $1 ($2) [$3@$4].
+client
+
+# [?] Oper
+# nick, user, host
+oper
+(.*) \((.*)@(.*)\) is now an operator
+[$0] %YOPER%n $1 ($2@$3).
+oper
+
+# [?] Failed oper attempt
+# nick, user, host
+oper_failed
+Failed OPER attempt - host mismatch by (.*) \((.*)@(.*)\)
+[$0] %ROPERFAIL%n $1 ($2@$3).
+oper
+
+# [x] Server split
+# source, target
+server_split
+Server (.*) split from (.*)
+[$0] %rSPLIT%n $1 from $2.
+server
+
+# [x] Server join
+# source, target
+server_join
+Server (.*) being introduced by (.*)
+[$0] %rJOIN%n $1 from $2.
+server
+
+# [?] Spoof
+# nick, realhost, spoofhost
+spoof
+(.*) spoofing: (.*) as (.*)
+[$0] %ySPOOF%n $1@$2 ($3).
+client
+
+# [?] Temporary K-line added
+# nick, duration, user, host, reason
+tkline_added
+(.*) added temporary ([0-9]+) min\. K-Line for \[(.*)@(.*)\] \[(.*)\]
+[$0] %rTKLINE%n $3@$4 [$1] for $2 min: $5.
+kill
+
+# [?] Temporary K-line expired
+# hostmask
+tkline_expired
+Temporary K-line for \[(.*@.*)\] expired
+[$0] %gTKLINE%n $1.
+kill
+
+# [?] K-line active
+# nick, user, host
+kline_active
+KLINE active for (.*)\[(.*)@(.*)]
+[$0] %cKLINE%n active: $1 ($2@$3).
+kill
+
+# [?] D-line active
+# nick, user, host
+dline_active
+DLINE active for (.*)\[(.*)@(.*)]
+%CDLINE%n active: $1 ($2@$3).
+kill MSG
+
+# [?] Attempt to join juped channel
+# nick, user, host, channel
+user_join_juped
+User (.*) \((.*)@(.*)\) is attempting to join locally juped channel (.*)
+%YJUPE%n $4: $1 ($2@$3)
+warning
+
+# [?] Too many on IP
+# nick, user, host, ip
+too_many_on_ip
+Too many on IP for (.*)\[(.*)@(.*)\] \((.*)\)
+%CIP%n $4: $1 ($2@$3).
+warning MSG
+
+# [s] Whois
+# nick, user, host
+whois_me
+(.*) \((.*)@(.*)\) is doing a /WHOIS on you\.
+%GWHOIS%n $1 ($2@$3).
+local HILIGHT
+
+# [?] New max local clients
+# number
+max_local_clients
+New Max Local Clients: (.*)
+%CMAX%n $1
+local
+
+# [?] STATS <letter>
+# letter, nick, user, host, server
+stats_requested
+STATS (.) requested by (.*) \((.*)@(.*)\) \[(.*)\]
+%ySTATS%n $1 $2($3@$4) $5.
+local MSG
+
+# [?] LINKS
+# arg, nick, user, host, server
+links_requested
+LINKS '(.*)' requested by (.*) \((.*)@(.*)\) \[(.*)\]
+%cLINKS%n '$1' $2($3@$4) $5.
+local MSG
+
+# [?] Gline request
+# opernick, operuser, operhost, server, mask, reason
+gline_request
+(.*)!(.*)@(.*) on (.*) is requesting gline for \[(.*)\] \[(.*)\]
+%cGLINEREQUEST%n $1: $5 [$6]
+kill MSG
+
+# [?] Gline Trigger
+# opernick, operuser, operhost, server, mask, reason
+gline_trigger
+(.*)!(.*)@(.*) on (.*) has triggered gline for \[(.*)\] \[(.*)\]
+%CGLINE%n $1: $5 [$6]
+kill MSG
+
+# [y] MOTD
+# nick, user, host, server
+motd_requested
+motd requested by (.*) \((.*)@(.*)\) \[(.*)\]
+%cMOTD%n $1 ($2@$3) $4.
+local
+
+# [y] TRACE
+# nick, user, host, server
+trace_requested
+trace requested by (.*) \((.*)@(.*)\) \[(.*)\]
+%cTRACE%n $1 ($2@$3) $4.
+local
+
+# Catchall for the rest
+catchall
+(.*)
+REST: $1
+rest
+
+# EOF

@@ -1,0 +1,623 @@
+# Datafile for ho-reformat.pl, server notice reformatting.
+# Part of the Hybrid Oper Script Collection.
+# See http://www.garion.org/irssi/hosc.php for the full archive.
+
+# -------------------------------------------------------------------
+# This is the IRCnet 2.11 specific datafile.
+# Created by Babar, based on Garion's one for Hybrid 7.
+# NOTE: This file is far from complete. Additions are welcome.
+# -------------------------------------------------------------------
+
+# Lines beginning with a # are ignored, as are empty lines.
+
+# Data formats consist of 4 lines:
+# - the (unique!) name plus (optional) options.
+# - the regexp to match the received server notice with.
+# - the format in which to display the message.
+# - the name(s) of the window to display the message to plus (optional)
+#   the message level of the message.
+
+# The options behind the name are, for now, only "continuematching".
+# If this is present, the script will continue matching if this regexp
+# has been matched. The default behaviour is to stop once a match has been
+# found.
+
+# In the format, $0 is the server tag, and $1 .. $n are the matched strings
+# of the regular expression.
+
+# Message level is CRAP by default. Use "MSG" to get a normal message
+# hilight, and HILIGHT for a hilight.
+# Use any number of target windows to send the message to. For example,
+# "client local HILIGHT" will send the reformatted notice to both the windows
+# 'client' and 'local' with message level HILIGHT.
+
+# There is one special window, which is "devnull". If a matched server
+# notice has "devnull" as target, this notice will be discarded.
+
+# The letter in square brackets in the comment is the user mode that needs
+# to be set to see these messages.
+
+# Default target window names (incomplete list):
+# client  - connect, quit, spoof
+# kill    - kill, kline, save
+# warning - possible flood
+# notices - oper, failed oper, split mode
+# server  - netsplit, netjoin
+# local   - local infos (max client, klines, stats, ...)
+# rest    - the rest
+
+# [c] Client connect
+# nick, user, host, ip, realname
+client_connect
+Client connecting: (.*) is (.*) from (.*) \[(.*)\] named (.*)
+[$0] %gCONN%n $1!$2@$3 [$4]: $5.
+client
+
+# [c] Client exit
+# nick, user, host, reason
+client_exit
+Client exiting: (.*) was (.*) from (.*) reason: "?([`\"]*)"?
+[$0] %rEXIT%n $1!$2@$3: $4.
+client
+
+# [?] Connect failure: detailled
+# nick, user, IP, reason
+connect_failure_detail
+connect failure: (.*)\[(.*)@(.*)\] (.*)
+[$0] %gConnect%n Failure: $1!$2@$3: $4
+client
+
+# [?] Connect failure
+# nick, user, host
+connect_failure
+Connect failure from (.*)\[(.*)@(.*)\]\.
+[$0] %gConnect%n Failure: $1!$2@$3
+client
+
+# [?] Local Kill
+# nick!user@host[server/SID], nick, user, host, server, SID, killer, path, reason
+local_kill
+Received KILL message for ((.*)!(.*)@(.*)\[(ircnet.nerim.fr|hub.club-internet.fr|ircnet.club-internet.fr)/(.*)\])\. From (.*) Path: (\S+) \((.*)\)
+[$0] %RLOCALKILL%N $2 ($3@$4) on $5/$6 by $7 ($9).
+kill HILIGHT
+
+# [?] XXX DEBUG Kill
+## nick!user@host[server/SID], nick, user, host, server, SID, killer, path, reason
+#debug_kill continuematching
+#Received KILL message for ((.*)!(.*)@(.*)\[(.*)/(.*)\])\. From (.*) Path: (\S+) \((.*)\)
+#[$0] %RDEBUGKILL%N $2!$3@$4 on $5/$6 by $7 ($9).
+#debug
+
+# [?] Kill
+# nick!user@host[server/SID], nick, user, host, server, SID, killer, path, reason
+oper_kill
+Received KILL message for ((.*)!(.*)@(.*)\[(.*)/(.*)\])\. From ([^\.]*) Path: (\S+) \((.*)\)
+[$0] %ROPERKILL%N $2!$3@$4 on $5/$6 by $7 ($9).
+local MSG
+
+#      (\(*@*\)* <- \(*) { _new_servnotice KILL $[9]nkill \(Nick Collision $after(\( $lw)\) }
+# [?] Server Nick Collision: (user1@host1)server1 <- (user2@host2)server2
+# nick, user@host, server/SID, killer server, server1, user2@host2, server2, userserver, hostserver
+#Received KILL message for ReM`FI_Ka!~ReMMoLo@tunnel-204.ipv6.coredumps.org[*.eutelia.it/2.10]. From hubb.irc.pl Path: irc.felk.cvut.cz!irc.ipv6.cesnet.cz!*.club-internet.fr!*.pl[-[qxQRwNvx@192.168.250.4]!hubb.irc.pl ((~ReMMoLo@tunnel-204.ipv6.coredumps.org)*.club-internet.fr <- (~ReMMoLo@213-216-235-10-Karjasilta-TR10.suomi.net)*.se[unknown@192.168.13.2])
+server_nick_collision
+Received KILL message for (.*)!(.*@.*)\[(.*/.*)\]\. From (.*) Path: \S+ \(\(.*@.*\)(.*) <- \((.*@.*)\)(.*\[.*@.*\])\)
+[$0] %rCOLLISION%n Server: %g$1%n!%c$2%n on $5 collided %c$6%n on $7 - $3 - $4
+kill
+
+# [?] Save - 2.11 Server nick collision avoided
+# nick, user1@host1, server1, user2@host2, server2
+save_server_nick_collision
+Received SAVE message for (.*)\. Path: \S+ \(\(.*@.*\)(.*) <- \((.*@.*)\)(.*)
+[$0] %RSAVE%n %g$1%n!$2 on $3 from %g$1%n!$4 on $5
+kill
+
+#      (* <- *\(*) { _new_servnotice KILL $[9]nkill \(Nick Change Collision $after(\( $lw)\) }
+# [?] Nick Collision: server1 <- server2(nick2)
+# nick1, user1@host1, [server/SID], killer server, server1, user2@host2, server2, nick2
+#Received KILL message for v!~skunk@Irc.Skjinternational.Com[irc6.ngnet.it/2.10]. From hub.club-internet.fr Path: irc.ipv6.cesnet.cz!*.club-internet.fr!hub.club-internet.fr (~skunk@Irc.Skjinternational.Com[*.easynet.net] <- lukasz@2001:1408:2000:0:0:0:0:40[*.pl](Karolinka))
+nick_collision_1
+Received KILL message for (.*)!(.*@.*)(\[.*/.*\])\. From (.*) Path: \S+ \(.*@.*(\[.*\]) <- (.*@.*)(\[.*\])\((.*)\)\)
+[$0] %rCOLLISION1%n %g$1%n!%c$2%n on $5 collided %g$8%n!%c$6%n on $7 - $3 - $4
+kill
+
+# [?] Save - 2.11 Nick Collision avoided
+# nick, user1@host1, server1, user2@host2, server2, nick2
+save_nick_collision_1
+Received SAVE message for (.*)\. Path: \S+ \((.*)\[(.*)\] <- (.*@.*)\[(.*)\]\((.*)\)\)
+[$0] %RSAVE%n %g$1%n!$2 on $3 was saved from collision by %g$6%n!$4 on $5
+kill
+
+#      (*(%) <- *) { _new_servnotice KILL $[9]nkill \(Nick Change Collision $after(\( $before(-1 \) $fw))\) }
+# [?] Nick Collision:  server1(nick1) <- server2
+# nick1, user1@host1, [server/SID], killer server, user2@host2, server2, nick2, server1
+#Received KILL message for vERu`oraS!la@host191-11.pool8251.interbusiness.it[*.tin.it/2.10]. From hub.club-internet.fr Path: irc.ipv6.cesnet.cz!*.club-internet.fr!hub.club-internet.fr (~Tiscali@host46-21.pool8251.interbusiness.it[*.tiscali.it](TriLLy^^) <- la@host191-11.pool8251.interbusiness.it[*.easynet.net])
+nick_collision_2
+Received KILL message for (.*)!(.*@.*)(\[.*/.*\])\. From (.*) Path: \S+ \((.*@.*)(\[.*\])\((.*)\) <- .*@.*(\[.*\])\)
+[$0] %rCOLLISION2%n %g$1%n!%c$2%n on $8 collided %g$7%n!%c$5%n on $6 - $3 - $4
+kill
+
+# [?] Save - 2.11 Nick Collision avoided (other side from above)
+# nick, user1@host1, server1, nick1, user2@host2, server2
+save_nick_collision_2
+Received SAVE message for (.*)\. Path: \S+ \((.*)\[(.*)\]\((.*)\) <- (.*@.*)\[(.*)\]\)
+[$0] %RSAVE%n %g$4%n!$2 on $3 was saved from collision by %g$1%n!$5 on $6
+kill
+
+#      (*\[%\] != *) { _new_servnotice KILL $[9]nkill \(Fake Prefix $lw\) }
+# [?] Fake Prefix: nickname[server1] != server2
+# nick, user@host, server, killer server, user, server1, server2
+fake_prefix
+Received KILL message for (.*)!(.*@.*)(\[.*/.*\])\. From (.*) Path: \S+ \((.*)(\[.*\]) != (.*)\)
+[$0] %rFAKE PREFIX%n %g$1%n!$2 ($5) is behind $6 not $7 - $3 - $4
+kill
+
+#      (* != *[*]) { _new_servnotice KILL $[9]nkill \(Wrong Direction $lw\) }
+# [?] Wrong Direction: server1 != server2[server2 hostname]
+# nick, user@host, server, killer server, user1@host1, user2@host2, server2 name
+wrong_direction
+Received KILL message for (.*)!(.*@.*)(\[.*/.*\])\. From (.*) Path: \S+ \((.*) != (.*)(\[.*\])\)
+[$0] %rWRONG DIRECTION%n %g$1%n!$2 ($5) is on $6, not $7 - $3 - $4
+kill
+
+#      (* <- %!* ) { _new_servnotice KILL $[9]nkill \(Illegal Nickname Change $fw\) }
+# [?] Illegal Nickname change: server <- nickname!user@hostname
+# nick, user@host, server, killer server, server, user2@host2
+illegal_nick_change
+Received KILL message for (.*)!(.*@.*)(\[.*/.*\])\. From (.*) Path: \S+ \((.*) <- (.*)!(.*@.*)\)
+[$0] %rILLEGAL NICKCHANGE%n %g$1%n!$2 to %g$6%n!$7 from $5 - $3 - $4
+kill
+
+#      (* <- *) { _new_servnotice KILL $[9]nkill \(Server/Nick Collision $lw\) }
+# [?] Classic Nick Collision: (user1@host1)server1 <- (user2@host2)server2
+# nick, user@host, server, killer server, user1@host1, server1, user2@host2, server2
+classic_nick_collision
+Received KILL message for (.*)!(.*@.*)(\[.*/.*\])\. From (.*) Path: \S+ \(\((.*@.*)\)(.*) <- \((.*@.*)\)(.*)\)
+[$0] %rNICK COLLISION%n %g$1%n $5 on $6 and $7 on $8 - $2 - $3 - $4
+kill
+
+# [?] Save - 2.11 Nick Collision avoided
+# nick, user1@host1, server1, user2@host2, server2
+save_classic_nick_collision
+Received SAVE message for (.*)\. Path: \S+ \((.*)\)(.*) <- \((.*@.*)\)(.*)
+[$0] %RSAVE%n %g$1%n!$2 on $3 was saved from collision by $4 on $5
+kill
+
+#      (*) { _new_servnotice KILL $[9]nkill \($8\) }
+# [?] Kills - rest
+# nick, user@host, server, killer server, reason
+kill
+Received KILL message for (.*)!(.*@.*)(\[.*/.*\])\. From (.*) Path: \S+ \((.*)\)
+[$0] %RKILL REST%n %g$1%n!$2 on $3 from $4: $5
+kill
+
+# [n] Nick change
+# oldnick, newnick, user, host
+nickchange
+Nick change (.*) to (.*) for (.*) from (.*)
+[$0] %cNICK%n $1 ($2) [$3@$4].
+client
+
+# [?] Delayed kills
+# total, kills, time
+delayed_kill
+DelayedKills checked (\d+) killed (\d+) in (\d+) sec
+[$0] %CDelayKills%n Killed $2 of $1 users in $3s.
+kill
+
+# [?] Oper 2.11
+# nick, user@host
+oper
+(.*) \((.*@.*)\) is now an operator
+[$0] %YOPER%n $1 ($2).
+notices
+
+# [?] Oper
+# nick, user@host, type
+oper_old
+(.*) \((.*@.*)\) is now operator \((.)\)
+[$0] %YOPER%n $1 ($2) ($3).
+notices
+
+# [?] Failed oper attempt
+# nick, user@host
+oper_failed
+FAILED OPER attempt by (.*)!(.*@.*)
+[$0] %ROPERFAIL%n %g$1%n!$2.
+notices
+
+# [?] Failed oper attempt - bad host
+# nick, user@host
+oper_failed_host
+Failed OPER attempt - host mismatch by (.*) \((.*@.*)\)
+[$0] %ROPERFAIL%n $1 ($2) Bad host.
+notices
+
+# [x] Server split
+# source, target, reason
+server_split
+Received SQUIT (.*) from (.*) \((.*)\)
+[$0] %rSPLIT%n $1 from $2: $3
+server
+
+# [x] Server join
+# source, target, hops, IP?, name
+server_join
+Received SERVER (.*) from (.*) \((\d+)( \[.*\])? (.*)\)
+[$0] %rJOIN%n $1 from $2 ($3):$4 $5
+server
+
+# [?] service online
+# user, host, server, service name, user, host, service type
+service_on
+Received SERVICE (.*)@(.*) from (.*) via (.*)\[(.*)@(.*)\] \((.*)\)
+[$0] %CSERVICE%n $1 %RON%n from $2 called $7
+local
+
+# [?] service offline
+# user, host, user, host
+service_off
+Received QUIT (.*)@(.*) from (.*)@(\S*) (.*)
+[$0] %CSERVICE%n %ROFF%n from $2 with $5
+local
+
+# [?] Spoof
+# nick, realhost, spoofhost
+spoof
+(.*) spoofing: (.*) as (.*)
+[$0] %ySPOOF%n $1@$2 ($3).
+client
+
+# [?] Timed temporary K-line added
+# user@host, time, nick, reason
+timed_kline_added
+TKLINE (.*@.*) \((\d+)\) by (.*)
+[$0] %rTKLINE%n $2s $1 [$3]: $4.
+kill
+
+# [?] Temporary K-line added
+# nick, user, host, reason
+tkline_added
+(.*) added a tkline for (.*)@(.*) with reason: (.*)
+[$0] %rTKLINE%n $2@$3 [$1]: $4.
+kill
+
+# [?] Temporary K-line expired
+# hostmask
+tkline_expired
+Temporary K-line for \[(.*@.*)\] expired
+[$0] %gTKLINE%n $1.
+kill
+
+# [?] K-line active
+# nick, user, host
+kline_active
+Kill line active for (.*)\[(.*)@(.*)\]
+[$0] %cKLINE%n active: $1 ($2@$3).
+kill
+
+# [?] K-lined
+# user, host
+kline
+K-lined (.*)@(.*)\.
+[$0] %cKLINE%n: $1@$2.
+warning
+
+# [?] D-line active
+# nick, user, host
+dline_active
+DLINE active for (.*)\[(.*)@(.*)\]
+[$0] %CDLINE%n active: $1 ($2@$3).
+kill MSG
+
+# [?] Attempt to join juped channel
+# nick, user, host, channel
+user_join_juped
+User (.*) \((.*)@(.*)\) is attempting to join locally juped channel (.*)
+[$0] %YJUPE%n $4: $1 ($2@$3)
+warning
+
+# [?] Too many on IP
+# nick, user, host, ip
+too_many_on_ip
+Too many on IP for (.*)\[(.*)@(.*)\] \((.*)\)
+[$0] %CIP%n $4: $1 ($2@$3).
+warning MSG
+
+# [?] Too many connections
+# type, local?, nick, host
+too_many_connection
+Too many (user|host) connections \((local|global)\) from (.*)\[(.*)@(.*)\]\.
+[$0] %CIP%n Too many $1 connections ($2) from: $3!$4@$5
+warning
+
+# [?] IP Mismatch
+# IP, name, IP in hex
+ip_mismatch
+IP# Mismatch: (.*) != (.*)\[(.*)\]
+[$0] %CIP%n $1 != $3 ($2).
+warning
+
+# [b] Whois
+# nick, user, host, server
+whois_me
+WHOIS on YOU requested by (.*) \((.*)@(.*)\) \[(.*)\]
+[$0] %GWHOIS%n $1 ($2@$3) [$4].
+notices HILIGHT
+
+# [?] New max clients 2.11
+# type, number
+max_clients
+New Max (Local|Global) Clients: (.*)
+[$0] %CMAX%n $2 ($1)
+local
+
+# [?] New max clients
+# type, number
+max_clients_old
+New highest (local|global) client connection: (.*)
+[$0] %CMAX%n $2 ($1)
+local
+
+# Max clients
+max_clients_start
+Highest connection count: (\d+) \((\d+) clients\)
+[$0] %CMAX%n $2 ($1)
+local
+
+# [?] Local decrease
+# old value, new value, time elapsed
+decrease_local_clients
+Local decrease from (\d+) to (\d+) clients in (\d+) seconds
+[$0] %CDECREASE%n From $1 to $2 in $3 seconds
+local
+
+# [?] Local increase
+# old value, new value, time elapsed
+increase_local_clients
+Local increase from (\d+) to (\d+) clients in (\d+) seconds
+[$0] %CINCREASE%n From $1 to $2 in $3 seconds
+local
+
+# [?] STATS <letter>
+# letter, nick, user, host
+stats_requested
+STATS (.) by (.*) from (.*) on (.*)
+[$0] %ySTATS%n $1 $2!$3@$4
+local MSG
+
+# [?] LINKS
+# arg, nick, user, host, server
+links_requested
+LINKS '(.*)' requested by (.*) \((.*)@(.*)\) \[(.*)\]
+[$0] %cLINKS%n '$1' $2($3@$4) $5.
+local MSG
+
+# [y] TRACE
+# nick, user, host, server
+trace_requested
+trace requested by (.*) \((.*)@(.*)\) \[(.*)\]
+[$0] %cTRACE%n $1 ($2@$3) $4.
+local
+
+# [?] Invalid Username
+# user, host
+invalid_username
+Invalid username:  (.*)@(.*)\.
+[$0] %CInvalid username%n $1@$2.
+kill
+
+#"[?] Rejecting connection
+# host
+rejecting_connection
+Rejecting connection from (.*)\.
+[$0] %gREJECT%n $1
+local
+
+# [?] Protocol error
+# server, user@host
+njoin_protocol_error
+from ([^[]*)\[(.*@.*)\] -- NJOIN protocol error 
+[$0] %CNJOIN%n $2 on $1 -  protocol error
+rest
+
+# [?] Protocol error
+# server, user@host
+njoin_protocol_error_2
+NJOIN protocol error from ([^[]*)\[(.*@.*)\]
+[$0] %CNJOIN%n $2 on $1 -- protocol error
+rest
+
+# [?] Autoconnect: link establishment
+# server, user, ip, version
+link_establishment
+Link with (.*)\[(.*)@(.*)\] established. \((.*)\)
+[$0] %CLINK%n $1 [$2@$3] ($4) established
+server
+
+# [?] Autoconnect: server received
+# server name, hop count, description
+received_server
+Received SERVER (.*) \((\d+) .*\)$
+[$0] %CSERVER%n $1 ($2): $3
+server
+
+# [?] Start of burst
+# server, user, ip, size, compressed size, ratio
+start_of_burst
+Connect burst to (.*)\[(.*@.*)\]: (\d+), compressed: (\d+) \((.*)\)
+[$0] %CBURST%n $1 [$2@$3]: $4 bytes, compressed $5 ($6)
+server
+
+# Updated ircd.tune.
+# [?] End of burst 2.11
+# server, SID, ??
+end_of_burst
+Received EOB for (.*) \[(.*)\] \((.*)\)
+[$0] %cEOB%n $1/$2: $3
+server
+
+# [?] End of burst
+# server
+old_end_of_burst
+EOB from (.*) \(PONG\)
+[$0] %cEOB%n $1
+server
+
+# [?] End of burst
+# server
+old_end_of_burst_2
+End of burst from (.*)
+[$0] %cEOB%n $1
+server
+
+# [?] End of burst
+# server, burst time
+burst_time
+End of burst from (.*) after (\d+) seconds.
+[$0] %cEOB%n $1: $2s.
+server
+
+# Closing link
+# server, user@host, ??, time
+closing_link
+Closing link to (.*)\[(.*@.*)\] \((\d+), (.*)\)
+[$0] %cCLOSING LINK%n $1 [$2]: $3. Connected for $4
+server
+
+# Closed connection
+# server, user@host, ??, time
+Server (.*)\[(.*@.*)\] closed the connection \((\d+), (.*)\)
+[$0] %cCLOSED LINK%n $1 [$2]: $3. Connected for $4
+server
+
+# No response
+# server, user@host, message
+No response from ([^[])\[(.*@.*)\] (closing link)
+[$0] %rNoResponse%n from $1 [$2]: $3
+server
+
+# Connection activated
+# server, user@host, message
+Connection to (.*)\[(.*@.*)\] (activated).
+[$0] %RCONNECTION%n to $1 [$2] $3
+server
+
+# Split detected
+#
+split_mode_on
+Network split detected, split mode activated
+[$0] %CSPLIT%n mode %cON%n
+notices
+
+# Split deactivated
+#
+split_mode_off
+Network rejoined, split mode deactivated
+[$0] %CSPLIT%n mode %gOFF%n
+notices
+
+# filename
+ircd_tune
+Updated (.*)\.$
+[$0] %gUpdate%n $1
+server
+
+# Reload
+# signal, filename
+got_signal
+Got signal (.*), reloading (.*) file
+[$0] %g$1%n Reloading $2
+server
+
+# Hash table growth
+# table name, previous size, new size, limit crossed
+hash_growth
+(.*) Hash Table from (\d+) to (\d+) \((\d+)\)
+[$0] %GHASH%n %g$1%n $2 -> $3 ($4)
+debug
+
+# Poolsize change
+# new size
+poolsize
+New poolsize (\d+)\. \(reached\)
+[$0] %GPOOLsize%n $1
+debug
+
+# udp packer dropped
+# size, source
+udp_packet
+udp packet dropped: (\d+) bytes from (\d+\.\d+\.\d+\.\d+\.\d+)
+[$0] %rudp packet dropped:%n %R$1%n bytes from %R$2%n
+notices
+
+# FreeNode
+set_hostname
+NickServ set your hostname to "(.+)"
+[$0] %GHostname set to%n $1
+notices
+
+# Hostname lookup
+hostname_lookup
+\*\*\* (Looking up your hostname(\.\.\.)?)
+[$0] %g$1%n
+notices
+
+# Hostname lookup success
+hostname_lookup_failure
+\*\*\* (Found your hostname)
+[$0] %g$1%n
+notices
+
+# Hostname lookup failure
+hostname_lookup_failure
+\*\*\* (Couldn't look up your hostname)
+[$0] %g$1%n
+notices
+
+# Checking ident
+ident_check
+\*\*\* (Checking [iI]dent|Got ident response)
+[$0] %g$1%n
+notices
+
+# Server rehash
+rehash
+(\S+) (is rehashing Server config file)
+[$0] %G$1%n $2
+notices
+
+# Denied http-post
+http_post
+Denied http-post connection from (\S+)\.
+[$0] %rHTTP-POST%n connection denied from %r$1%n
+notices
+
+# ToDo
+#16:47:52  [IRCNet1] REST: TKLINE: Incorrect format
+#21:44:42  [IRCNet1] REST: TKill reaped 341 souls
+#16:00:59  [IRCNet] REST: Received SAVE message for z. Path: ircnet.nerim.fr!(~lamah@LPuteaux-151-42-29-201.w193-251.abo.wanadoo.fr[z](z) <-
+#~rox@crmotors.plus.com[*.club-internet.fr])
+#16:00:59  [IRCNet] REST: Received SAVE message for WaRNeD. Path: ircnet.nerim.fr!(~lamah@LPuteaux-151-42-29-201.w193-251.abo.wanadoo.fr[2502ACWIX] <-
+#~rox@crmotors.plus.com[*.club-internet.fr](WaRNeD))
+#21:54:39  [IRCNet] REST: Server *.club-internet.fr[unknown@hub.club-internet.fr] closed the connection (8,  1:00:35)
+#21:54:52  [IRCNet1] REST: Server hub.club-internet.fr[unknown@192.168.250.1] closed the connection (8,  1:17:32)
+#21:56:39  [IRCNet1] REST: Connecting to *@192.168.250.1[hub.club-internet.fr] by Gael[~Gael@127.0.0.1]
+#22:00:38  [IRCNet] REST: Connection to *.club-internet.fr[unknown@hub.club-internet.fr] activated.
+#22:02:10  [IRCNet] REST: Received SAVE message for z. Path: ircnet.nerim.fr!(~james@ren77-1-82-238-21-56.fbx.proxad.net)ircnet.nerim.fr <-
+#(~gvt@189.27.116.225.adsl.gvt.net.br)*.club-internet.fr
+#22:02:14  [IRCNet] REST: Received SAVE message for d. Path: ircnet.nerim.fr!(~alexo@mut38-6-88-167-70-201.fbx.proxad.net)ircnet.nerim.fr <-
+#(gon@knip.pol.lublin.pl)*.club-internet.fr
+#17:40:04  [IRCNet] REST: Cannot accept connection ircnet.nerim.fr[0.0.0.0@62.4.23.42.6667]:Software caused connection abort
+#02:46:22  [IRCNet] REST: getsockopt(IP_OPTIONS) [unknown@82.234.140.19]:Connection reset by peer
+#02:46:22  [IRCNet] REST: getpeername for auth request [unknown@82.234.140.19]:Socket is not connected
+#02:46:22  [IRCNet] REST: Warning: Entry 161 [N] is not active.
+#02:46:22  [IRCNet] REST: Warning: Entry 161 [D] is not active.
+#
+
+# Catchall for the rest
+catchall
+(.*)
+[$0] REST: $1
+rest
+
+# EOF

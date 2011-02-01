@@ -1,0 +1,39 @@
+use Irssi;
+use vars qw($VERSION %IRSSI);
+
+$VERSION = "1.1";
+
+
+%IRSSI = (
+    authors     => "unreal",
+    contact     => "unreal\@slashorg.net",
+    name        => "CAC 40",
+    description => "Echo CAC 40 to chan",
+    license     => "Public Domain",
+    url         => "http://www.slashorg.net",
+    changed     => "Tue Oct 14 12:37:49 CEST 2008"
+);
+
+
+sub event_privmsg_cac40 {
+	my ($server, $data, $nick, $mask) = @_;
+	my ($target, $text) = $data =~ /^(\S*)\s:(.*)/;
+	return unless $text =~ /^!/;
+
+	if ( $text =~ /^!cac40/ ) {
+	    my $URL = "http://download.finance.yahoo.com/d/quotes.csv?s=%5EFCHI&f=sl1d1t1c1ohgv&e=.csv";
+	    open YAHOO, "wget -qO- '$URL'|" or return;
+	    while( <YAHOO> ) {
+		chomp;
+		if ( my ($name, $index, $date, $time, $change, $open)
+		    = /^"\^(\S+)",(\d+\.\d+),"(\S+)","(\S+)",(\S+),(\S+),(\S+),(\S+)/ ) {
+		    my $pct = int($change / ( $change - $index ) * 1000000)/10000;
+print "Done.\n";
+		    $server->command ( "msg $target $name - Cours : $index ($pct%)" );
+		}
+	    }
+	    close YAHOO;
+	}
+}
+
+Irssi::signal_add('event privmsg', 'event_privmsg_cac40');

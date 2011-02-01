@@ -1,0 +1,1 @@
+../bitlbee_facebook_rename.pl

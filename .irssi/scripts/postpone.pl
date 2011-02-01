@@ -1,0 +1,1 @@
+/usr/share/irssi/scripts/postpone.pl
