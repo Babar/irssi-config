@@ -1,4 +1,4 @@
-### operit.pl (c) 2002 Petr Baudis <pasky@ji.cz>
+### operit.pl (c) 2002, 2003 Petr Baudis <pasky@ucw.cz>
 #
 ## Perform certain action (invite/op/...) on request authenticated by the
 ## IRC operator status.
@@ -10,10 +10,23 @@
 ## Garion <garion@dnsspam.nl>		(ideas)
 ## Borys <borys@irc.pl>			(ideas)
 ## devastor <devastor@idiosynkrasia.net>(bug reports)
+## babar <babar@magicnet.org>		(delay patch)
 #
-## $Id: operit.pl,v 1.10 2002/11/29 16:51:46 pasky Exp pasky $
+## $Id: operit.pl,v 1.14 2003/09/06 12:27:11 pasky Exp pasky $
 #
 # $Log: operit.pl,v $
+# Revision 1.14  2003/09/06 12:27:11  pasky
+# Okay, so while I'm at it updated other instance of my email addy, copyright, bunch of grammar fixes and documented the operit_public_delay variable.
+#
+# Revision 1.13  2003/09/06 12:25:09  pasky
+# Updated my email addy.
+#
+# Revision 1.12  2003/09/06 12:23:50  pasky
+# Added support for randomly delayed operit - if operit is public, the delay is zero to five seconds by default - this helps greatly if there is a lot of operit-enabled clients on a channel. Patch by Babar <babar@magicnet.org> and me.
+#
+# Revision 1.11  2003/03/20 08:58:18  pasky
+# Match whole channel, not random part, when checking for deny_channels and deny_hosts. So you can deny operits at #iraq but still allow them at #iraqlive ;-). Thanks to viha for cooperation during testing.
+#
 # Revision 1.10  2002/11/29 16:51:46  pasky
 # Don't play with channels we aren't on. Fixes occassional 'can't call method command on undefined value'; thanks to devastor for a report.
 #
@@ -70,19 +83,19 @@ use strict;
 
 use vars qw ($VERSION %IRSSI $rcsid);
 
-$rcsid = '$Id: operit.pl,v 1.10 2002/11/29 16:51:46 pasky Exp pasky $';
-($VERSION) = '$Revision: 1.10 $' =~ / (\d+\.\d+) /;
+$rcsid = '$Id: operit.pl,v 1.14 2003/09/06 12:27:11 pasky Exp pasky $';
+($VERSION) = '$Revision: 1.14 $' =~ / (\d+\.\d+) /;
 %IRSSI = (
           name        => 'operit',
           authors     => 'Petr Baudis',
-          contact     => 'pasky@ji.cz',
+          contact     => 'pasky@ucw.cz',
           url         => 'http://pasky.ji.cz/~pasky/dev/irssi/',
           license     => 'BSD',
           description => 'Perform certain action (invite/op/...) on request authenticated by the IRC operator status.'
          );
 
 
-use Irssi 20011112;
+use Irssi 20021117; # timeout_add_once
 use Irssi::Irc;
 
 
@@ -95,6 +108,7 @@ my $chan = "";   # object of the command
 my $coperit = 0;
 my $cinvait = 0;
 my $cdamode = 0;
+my $mpublic = 0;
 
 
 sub event_privmsg {
@@ -103,10 +117,14 @@ sub event_privmsg {
 
   return if (Irssi::settings_get_bool("operit_deny"));
 
-  return if (!Irssi::settings_get_bool("operit_allow_public")
-		and ($msgtarget ne $server->{nick}));
-
   if ($text =~ s/^(invait|operit|damode)( .*)?$/$2/i) {
+    if (uc($msgtarget) eq uc($server->{nick})) {
+      $mpublic = 0;
+    } else {
+      return unless (Irssi::settings_get_bool("operit_allow_public"));
+      $mpublic = 1;
+    }
+
     if (time - $queue < 10) {
       Irssi::print "Operit currently deactivated or queued. Request ignored."
 	if (time - $disp > 20);
@@ -127,7 +145,7 @@ sub event_privmsg {
       foreach (split /\s+/, Irssi::settings_get_str("operit_chans")) {
         s/\./\\./;
 	s/\*/.*/g;
-	if ($chan =~ /$_/i) {
+	if ($chan =~ /^$_$/i) {
 	  $a++;
 	}
       }
@@ -140,13 +158,13 @@ sub event_privmsg {
       foreach (split /\s+/, Irssi::settings_get_str("operit_chans_deny")) {
         s/\./\\./;
 	s/\*/.*/g;
-	if ($chan =~ /$_/i) {
+	if ($chan =~ /^$_$/i) {
 	  Irssi::print "Unauthorized $cmd $chan by $target (in operit_chans_deny)" if (Irssi::settings_get_bool("operit_show_requests"));
 	  return;
 	}
       }
       
-      foreach (split /\s+/, Irssi::settings_get_str("operit_hosts_deny")) {
+      foreach (split /^\s+$/, Irssi::settings_get_str("operit_hosts_deny")) {
         s/\./\\./;
 	s/\*/.*/g;
 	if ($address =~ /$_/i) {
@@ -190,7 +208,19 @@ sub event_userhost_operit {
     next unless ($channel);
 
     if (lc($cmd) eq "operit") {
-      $channel->command("op $target");
+      if ($mpublic) {
+	my $precision = 10; # Delay precision (10 = 1/10s)
+	my $rdelay = int(rand(Irssi::settings_get_str("operit_public_delay") * $precision)) * 1000 / $precision;
+
+	Irssi::print "Waiting " . ($rdelay / 1000) . " seconds before executing PUBLIC $cmd for $target on $chan";
+	Irssi::timeout_add_once($rdelay + 11, sub { # XXX why + 10 ? --pasky
+			my ($target, $channel) = @{$_[0]};
+			my ($tgrec) = $channel->nick_find($target);
+        		$channel->command("op $target") unless ($tgrec and $tgrec->{'op'});
+		}, [ $target, $channel ]);
+      } else {
+        $channel->command("op $target");
+      }
       $coperit++;
       
     } elsif (lc($cmd) eq "invait") {
@@ -245,11 +275,13 @@ Variables
 operit_chans      - The channelmask operit/invait is permitted on. (* is *)
 operit_chans_deny - The channel(s) operit/invait is not permitted on. (* is *)
 operit_hosts_deny - The user\@host(s) operit/invait is not permitted from. (* is *)
-operit_deny       - Toogle this ON, if you don't actually want invait/operit to function.
+operit_deny       - Toogle this ON if you don't actually want invait/operit to function.
 operit_show_requests
-                  - Toogle this OFF, if you don't want to see messages about operit requests.
+                  - Toogle this OFF if you don't want to see messages about operit requests.
 operit_allow_public
-                  - Toogle this OFF, if you don't want requests written on channels to be proceeded.
+                  - Toogle this OFF if you don't want requests written on channels to be proceeded.
+operit_public_delay
+		  - Set this to 0 if you don't want random delay between request and action.
 USAGEE
 	) {
       Irssi::print $_;
@@ -282,6 +314,7 @@ Irssi::settings_add_str("operit", "operit_hosts_deny", "*!*@*.lamehost1 *lamehos
 Irssi::settings_add_bool("operit", "operit_deny", 0);
 Irssi::settings_add_bool("operit", "operit_show_requests", 1);
 Irssi::settings_add_bool("operit", "operit_allow_public", 1);
+Irssi::settings_add_str("operit", "operit_public_delay", 5);
 
 
 Irssi::print("Operit $VERSION loaded... see command 'operit usage'");
