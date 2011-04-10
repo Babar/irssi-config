@@ -53,7 +53,7 @@ sub stopmsg_signal {
 # From piespy.pl
 sub channel_blocked {
 	my ($msgtarget) = @_;
-	state $oldtargets;
+	state $oldtargets = '';
 	state %blockedtargets;
 	$msgtarget = lc $msgtarget;
 	if((my $list = lc Irssi::settings_get_str("stopmsg_channels")) ne $oldtargets) {
