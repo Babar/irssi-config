@@ -19,7 +19,9 @@
 #
 # Thanks go to the various scripts on http://scripts.irssi.org/
 #
-# Babar added caching in 0.2
+# v0.1 - First bash at it.
+# v0.2 - Babar added caching
+# v0.3 - Was only hiding from client, now actually stopping the message.
 
 use Irssi;
 use strict;
@@ -28,7 +30,7 @@ use 5.009004; # For state
 use feature 'state';
 use vars qw($VERSION %IRSSI);
 
-$VERSION = '0.2';
+$VERSION = '0.3';
 %IRSSI = (
 	authors		=>	'Mark \'znx\' Sangster',
 	contact		=>	'znxster@gmail.com',
@@ -43,14 +45,23 @@ Irssi::theme_register([
 	'stopmsg_loaded', '%R>>%n %_stopmsg:%_ Version $0 by $1.',
 ]);
 
+# Actually stop the message
 sub stopmsg_signal {
+	my ($server, $target, $msg) = @_;
+	if(channel_blocked($target)) {
+		Irssi::signal_stop();
+	}
+}
+
+# Hide the messge from self
+sub stopmsg_hide_signal {
 	my ($server, $msg, $target) = @_;
 	if(channel_blocked($target)) {
 		Irssi::signal_stop();
 	}
 }
 
-# From piespy.pl
+# From Babar
 sub channel_blocked {
 	my ($msgtarget) = @_;
 	state $oldtargets = '';
@@ -63,6 +74,7 @@ sub channel_blocked {
 	return exists $blockedtargets{$msgtarget};
 }
 
-Irssi::signal_add('message own_public', 'stopmsg_signal');
+Irssi::signal_add('server sendmsg', 'stopmsg_signal');
+Irssi::signal_add('message own_public', 'stopmsg_hide_signal');
 Irssi::settings_add_str("stopmsg", "stopmsg_channels", "");
 Irssi::printformat(MSGLEVEL_CLIENTCRAP, 'stopmsg_loaded', $VERSION, $IRSSI{authors});
