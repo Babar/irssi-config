@@ -19,12 +19,16 @@
 #
 # Thanks go to the various scripts on http://scripts.irssi.org/
 #
+# Babar added caching in 0.2
 
 use Irssi;
 use strict;
+use warnings;
+use 5.009004; # For state
+use feature 'state';
 use vars qw($VERSION %IRSSI);
 
-$VERSION = '0.1';
+$VERSION = '0.2';
 %IRSSI = (
 	authors		=>	'Mark \'znx\' Sangster',
 	contact		=>	'znxster@gmail.com',
@@ -41,19 +45,22 @@ Irssi::theme_register([
 
 sub stopmsg_signal {
 	my ($server, $msg, $target) = @_;
-	if(channel_allowed($target)) {
+	if(channel_blocked($target)) {
 		Irssi::signal_stop();
 	}
 }
 
 # From piespy.pl
-sub channel_allowed($) {
+sub channel_blocked {
 	my ($msgtarget) = @_;
+	state $oldtargets;
+	state %blockedtargets;
 	$msgtarget = lc $msgtarget;
-	if(my $l = Irssi::settings_get_str("stopmsg_channels")) {
-		return 1 if grep { lc $_ eq $msgtarget } split (/,/, $l)
+	if((my $list = lc Irssi::settings_get_str("stopmsg_channels")) ne $oldtargets) {
+		$oldtargets = lc Irssi::settings_get_str("stopmsg_channels");
+		%blockedtargets = map { $_ => 1 } split /,/, $list
 	}
-	return 0;
+	return exists $blockedtargets{$msgtarget};
 }
 
 Irssi::signal_add('message own_public', 'stopmsg_signal');
