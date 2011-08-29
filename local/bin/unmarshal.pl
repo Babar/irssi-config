@@ -17,41 +17,32 @@ my $content = "";
 my $category = "Message";
 my $subject = "";
 
-sub unmarshall(\$)
-{
-	my $foo = shift;
+sub unmarshall {
+    my $string = shift;
+    for( $string ) {
+	    s/\\\\/\\/g;
+	    s/\\n/\n/g;
 
-	${$foo} =~ s/\\\\/\\/g;
-	${$foo} =~ s/\\n/\n/g;
-
-	# escape it as well
-	${$foo} =~ s/&/&amp;/g;
-	${$foo} =~ s/'/&apos;/g;
-	${$foo} =~ s/"/&quot;/g;
-	${$foo} =~ s/>/&gt;/g;
-	${$foo} =~ s/</&lt;/g;
+	    s/&/&amp;/g;
+	    s/'/&apos;/g;
+	    s/"/&quot;/g;
+	    s/>/&gt;/g;
+	    s/</&lt;/g;
+    }
+    return $string;
 }
 
-while (<STDIN>)
-{
-	if (/^([A-Z]+)\s+(.+?)\s*$/)
-	{
-		$category = $2 if ($1 eq 'CATEGORY');
-		$icon     = $2 if ($1 eq 'ICON');
-		$content  = $2 if ($1 eq 'CONTENT');
-		$timeout  = $2 if ($1 eq 'TIMEOUT');
-		$subject  = $2 if ($1 eq 'SUBJECT');
-		$urgency  = $2 if ($1 eq 'URGENCY');
+while (<STDIN>) {
+	if (/^([A-Z]+)\s+(.+?)\s*$/) {
+		$category = unmarshall($2) if ($1 eq 'CATEGORY');
+		$icon     = unmarshall($2) if ($1 eq 'ICON');
+		$content  = unmarshall($2) if ($1 eq 'CONTENT');
+		$timeout  = unmarshall($2) if ($1 eq 'TIMEOUT');
+		$subject  = unmarshall($2) if ($1 eq 'SUBJECT');
+		$urgency  = unmarshall($2) if ($1 eq 'URGENCY');
 	}
 }
 
 exit unless ($content or $subject);
-
-unmarshall($category);
-unmarshall($icon);
-unmarshall($content);
-unmarshall($timeout);
-unmarshall($subject);
-unmarshall($urgency);
 
 system('notify-send', '-i', $icon, '-c', $category, '-u', $urgency, '-t', $timeout, '--', $subject, $content);
