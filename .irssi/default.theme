@@ -303,7 +303,7 @@ abstracts = {
 formats = {
   "fe-common/core" = {
     timestamp = "{timestamp %b%%V%B%%u%w%%H%W%%M%w%%S }";
-    pubmsg = "{pubmsgnick $2 {pubnick \00306$0}}$1";
+    pubmsg = "{pubmsgnick $2 {pubnick \00307$0}}$1";
     line_start_irssi = "{line_start}";
     endofnames = "{channel $0}: {hilight $1} nicks {comment {hilight $2} ops, {hilight $4} voices, {hilight $5} normal}";
   };
