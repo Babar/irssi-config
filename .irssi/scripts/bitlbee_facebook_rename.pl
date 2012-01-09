@@ -40,7 +40,7 @@ sub whois_data
   if (my $channel = delete($nicksToRename{$nick}))
   {
     # TODO: Remove accents and such stuff...
-    $ircname =~ tr/\300\301\302\303\304\305\307\310\311\312\313\314\315\316\317\321\322\323\324\324\325\326\330\331\332\333\334\335\337\340\341\342\343\344\345\347\350\351\352\353\354\355\356\357\361\362\363\364\364\365\366\370\371\372\373\374\375\377().\015\"\*\%\[\]\{\}\?\/\-\'\!:,\t/aaaaaaceeeeiiiinoooooouuuuyaaaaaaceeeeiiiinoooooouuuuyy/d;
+#    $ircname =~ tr/ąäàâçćéèęêëïîńñóôöôüùûłśżźß/aaaaaceeeeiinnoooouuulszz/d;
     $ircname =~ s/[^A-Za-z0-9_]//g;
     $ircname = substr( $ircname, 0, 25 );
 
