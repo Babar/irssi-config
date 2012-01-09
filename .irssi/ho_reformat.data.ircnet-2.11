@@ -139,7 +139,7 @@ kill
 # [?] Save - 2.11 Nick Collision avoided (other side from above)
 # nick, user1@host1, server1, nick1, user2@host2, server2
 save_nick_collision_2
-Received SAVE message for (.*)\. Path: \S+ \((.*)\[(.*)\]\((.*)\) <- (.*@.*)\[(.*)\]\)
+Received SAVE message for (.*)\. Path: \S+!\((.*)\[(.*)\]\((.*)\) <- (.*@.*)\[(.*)\]\)
 [$0] %RSAVE%n %g$4%n!$2 on $3 was saved from collision by %g$1%n!$5 on $6
 kill
 
