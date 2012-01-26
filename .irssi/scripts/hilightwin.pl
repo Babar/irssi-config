@@ -18,6 +18,7 @@
 
 use Irssi;
 use POSIX;
+use MIME::QuotedPrint;
 use vars qw($VERSION %IRSSI);
 
 $VERSION = "0.03";
@@ -46,8 +47,12 @@ sub sig_printtext {
     ) {
         $window = Irssi::window_find_name('hilight');
 
-        print STDERR "\033[5iICON notification-message-im\n"
-            ."SUBJECT $dest->{target}\nCONTENT $stripped\n\033[4i"
+        my $message = "ICON notification-message-im\nSUBJECT "
+            . encode_qp( $dest->{target}, '\\n' )
+            . "\nCONTENT "
+            . encode_qp( $stripped, '\\n' )
+            . "\n";
+        print STDERR "\033[5i$message\033[4i"
             if Irssi::settings_get_bool('hilightwin_sendnotify');
         if ($dest->{level} & MSGLEVEL_PUBLIC) {
             $text = $dest->{target}.": ".$text;

@@ -4,28 +4,32 @@
 # it sends the notification to a remote host by marshalling the message
 # place it in /usr/local/bin/ for example
 use strict;
+use warnings;
+use MIME::QuotedPrint;
 use Getopt::Long;
 
-sub escape(\$)
-{
-	my $s = shift;
-	${$s} =~ s/\n/\\n/g;
-	return $s;
+sub escape(\$) {
+    my $s = shift;
+    $$s =~ s/\n/\\n/g;
+    $$s = encode_qp($$s);
+    return $s;
 }
 
-my ($category, $summary, $icon, $timeout, $message, $urgency);
+my ( $category, $summary, $icon, $timeout, $message, $urgency );
 
 $summary = shift || "";
 $message = shift || "";
 
-my $result = GetOptions ("urgency=s" => \$urgency,
-  "u=s"           => \$urgency,
-  "expire-time=i" => \$timeout,
-  "t=i"           => \$timeout,
-  "category=s"    => \$category,
-  "c=s"           => \$category,
-  "icon=s"        => \$icon,
-  "i=s"           => \$icon);
+my $result = GetOptions(
+    "urgency=s"     => \$urgency,
+    "u=s"           => \$urgency,
+    "expire-time=i" => \$timeout,
+    "t=i"           => \$timeout,
+    "category=s"    => \$category,
+    "c=s"           => \$category,
+    "icon=s"        => \$icon,
+    "i=s"           => \$icon
+);
 
 exit unless $result;
 
@@ -34,14 +38,12 @@ escape($summary);
 
 # collect the whole output in one variable since stderr seems to be
 # line-buffered
-my $lines = "";
+my $lines = '';
 $lines .= "CATEGORY $category\n" if $category;
-$lines .= "SUBJECT $summary\n" if $summary;
-$lines .= "URGENCY $urgency\n" if $urgency;
-$lines .= "ICON $icon\n" if $icon;
-$lines .= "TIMEOUT $timeout\n" if defined $timeout;
-$lines .= "CONTENT $message\n" if $message;
+$lines .= "SUBJECT $summary\n"   if $summary;
+$lines .= "URGENCY $urgency\n"   if $urgency;
+$lines .= "ICON $icon\n"         if $icon;
+$lines .= "TIMEOUT $timeout\n"   if defined $timeout;
+$lines .= "CONTENT $message\n"   if $message;
 
-print STDERR "\033[5i";
-print STDERR $lines;
-print STDERR "\033[4i";
+print STDERR "\033[5i$lines\033[4i";
