@@ -11,6 +11,8 @@ use strict;
 use warnings;
 use utf8;
 use MIME::QuotedPrint;
+
+sub DEBUG { 0 }
 $ENV{PATH} = '/bin:/usr/bin';
 
 my $icon     = "gtk-dialog-info";
@@ -24,6 +26,7 @@ sub unmarshall {
     my $string = decode_qp( $_[0] );
     for ($string) {
         s/=\\n$//;
+        s/=\\n/\n/g;
         s/\\\\/\\/g;
         s/\\n/\n/g;
 
@@ -36,7 +39,9 @@ sub unmarshall {
     return $string;
 }
 
+open my $debug, '>', '/tmp/marsh.log' or die $! if DEBUG;
 while (<STDIN>) {
+    print $debug $_ if DEBUG;
     if (/^([A-Z]+)\s+(.+?)\s*$/) {
         $category = unmarshall($2) if ( $1 eq 'CATEGORY' );
         $icon     = unmarshall($2) if ( $1 eq 'ICON' );
@@ -46,6 +51,7 @@ while (<STDIN>) {
         $urgency  = unmarshall($2) if ( $1 eq 'URGENCY' );
     }
 }
+close $debug if DEBUG;
 
 exit unless ( $content or $subject );
 
