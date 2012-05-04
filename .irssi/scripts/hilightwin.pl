@@ -50,7 +50,7 @@ sub sig_printtext {
         $window = Irssi::window_find_name('hilight');
 
         system "/usr/bin/notify-send",
-          -i => 'gtk-dialog-info',
+          -i => 'notification-message-IM',
           -c => 'Message',
           -u => 'normal',
           -t => 5000,
