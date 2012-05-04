@@ -18,11 +18,10 @@
 
 use Irssi;
 use POSIX;
-use MIME::QuotedPrint;
 use vars qw($VERSION %IRSSI);
 
 $VERSION = "0.03";
-%IRSSI = (
+%IRSSI   = (
     authors     => "Timo \'cras\' Sirainen, Mark \'znx\' Sangster",
     contact     => "tss\@iki.fi, znxster\@gmail.com",
     name        => "hilightwin",
@@ -33,45 +32,41 @@ $VERSION = "0.03";
 );
 
 sub sig_printtext {
-    my ($dest, $text, $stripped) = @_;
+    my ( $dest, $text, $stripped ) = @_;
 
     my $opt = MSGLEVEL_HILIGHT;
 
-    if(Irssi::settings_get_bool('hilightwin_showprivmsg')) {
-        $opt = MSGLEVEL_HILIGHT|MSGLEVEL_MSGS;
+    if ( Irssi::settings_get_bool('hilightwin_showprivmsg') ) {
+        $opt = MSGLEVEL_HILIGHT | MSGLEVEL_MSGS;
     }
 
-    if(
-        ($dest->{level} & ($opt)) &&
-        ($dest->{level} & MSGLEVEL_NOHILIGHT) == 0
-    ) {
+    if (   ( $dest->{level} & ($opt) )
+        && ( $dest->{level} & MSGLEVEL_NOHILIGHT ) == 0 )
+    {
         $window = Irssi::window_find_name('hilight');
 
-        my $message = "ICON notification-message-im\nSUBJECT "
-            . encode_qp( $dest->{target}, '\\n' )
-            . "\nCONTENT "
-            . encode_qp( $stripped, '\\n' )
-            . "\n";
-        print STDERR "\033[5i$message\033[4i"
-            if Irssi::settings_get_bool('hilightwin_sendnotify');
-        if ($dest->{level} & MSGLEVEL_PUBLIC) {
-            $text = $dest->{target}.": ".$text;
+        system "/usr/bin/notify-send", $dest->{target}, $stripped
+          if Irssi::settings_get_bool('hilightwin_sendnotify');
+        if ( $dest->{level} & MSGLEVEL_PUBLIC ) {
+            $text = $dest->{target} . ": " . $text;
         }
         my $theme = Irssi::current_theme();
-        my $format = $theme->format_expand( $theme->get_format('fe-common/core','timestamp') );
+        my $format =
+          $theme->format_expand(
+            $theme->get_format( 'fe-common/core', 'timestamp' ) );
         $format =~ s/\%(.)/$1 eq '%' ? '%' : "%%$1"/eg;
-        $text =~ s/\%/\%\%/g;
-        $text = strftime( $format, localtime ).$text;
-        $window->print( $text, MSGLEVEL_NEVER) if ($window);
+        $text   =~ s/\%/\%\%/g;
+        $text = strftime( $format, localtime ) . $text;
+        $window->print( $text, MSGLEVEL_NEVER ) if ($window);
     }
 }
 
 $window = Irssi::window_find_name('hilight');
-Irssi::print("Create a window named 'hilight'") if (!$window);
+Irssi::print("Create a window named 'hilight'") if ( !$window );
 
-Irssi::settings_add_bool('hilightwin','hilightwin_showprivmsg',1);
-Irssi::settings_add_bool('hilightwin','hilightwin_sendnotify',0);
+Irssi::settings_add_bool( 'hilightwin', 'hilightwin_showprivmsg', 1 );
+Irssi::settings_add_bool( 'hilightwin', 'hilightwin_sendnotify',  0 );
 
-Irssi::signal_add('print text', 'sig_printtext');
+Irssi::signal_add( 'print text', 'sig_printtext' );
 
 # vim:set ts=4 sw=4 et:
