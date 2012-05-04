@@ -8,13 +8,17 @@
 # Babar modded it a bit too:
 # Added the timestamp from the theme, not default one
 # Added send-notify support:
-# After suggestion from tomaw, added remote notification support as explained
-# on this blog post: http://blog.foosion.org/2008/02/15/libnotify-over-ssh/
-# You'd have to configure your terminal for it, for example for urxvt:
-# URxvt.print-pipe: ~/scripts/unmarshal.pl
-# And put the umarshal.pl script in it, so:
-# wget -qO ~/scripts/unmarshal.pl http://www.0x11.net/notify-remote/unmarshal.pl
-# chmod 755 ~/scripts/unmarshal.pl
+
+=begin
+You need:
+To create the split window:
+/window new split
+/window name hilight
+/window size 6
+
+To install notify-send:
+apt-get install libnotify-bin
+=cut
 
 use Irssi;
 use POSIX;
@@ -65,7 +69,7 @@ $window = Irssi::window_find_name('hilight');
 Irssi::print("Create a window named 'hilight'") if ( !$window );
 
 Irssi::settings_add_bool( 'hilightwin', 'hilightwin_showprivmsg', 1 );
-Irssi::settings_add_bool( 'hilightwin', 'hilightwin_sendnotify',  0 );
+Irssi::settings_add_bool( 'hilightwin', 'hilightwin_sendnotify',  1 );
 
 Irssi::signal_add( 'print text', 'sig_printtext' );
 
