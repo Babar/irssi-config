@@ -49,7 +49,12 @@ sub sig_printtext {
     {
         $window = Irssi::window_find_name('hilight');
 
-        system "/usr/bin/notify-send", $dest->{target}, $stripped
+        system "/usr/bin/notify-send",
+          -i => 'gtk-dialog-info',
+          -c => 'Message',
+          -u => 'normal',
+          -t => 5000,
+          $dest->{target}, $stripped
           if Irssi::settings_get_bool('hilightwin_sendnotify');
         if ( $dest->{level} & MSGLEVEL_PUBLIC ) {
             $text = $dest->{target} . ": " . $text;
